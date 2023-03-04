@@ -1,17 +1,31 @@
 from PIL import Image
+from Crypto.Protocol.KDF import scrypt
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+from Crypto.Random import get_random_bytes
+from base64 import b64encode, b64decode
+import json
 
 
 # TODO
 # Optional CBC-128 encoding
-# Choice between typed and .txt input
-# Ignore extension and autosearch if not given
-# Default key to original file name if no key given
+# Figure out how to store IV (JSON or .bin file)
 # Check if string fits into image before encoding
+# Pyodide
 # Allow multiple encryption algos
-# Decide between CLI args and GUI
-# Bulk encode img folder and text folder?
-# Bulk decode img folder
 
+def CBC_encrypt(data, password):
+    salt = get_random_bytes(16)
+    key = scrypt(password, salt, 16, N=2 ** 14, r=8, p=1)
+    cipher = AES.new(key, AES.MODE_CBC)
+    ct_bytes = cipher.encrypt(pad(data, AES.block_size))
+    iv = b64encode(cipher.iv).decode('utf-8')
+    ct = b64encode(ct_bytes).decode('utf-8')
+    st = b64encode(salt).decode('utf-8')
+    result = json.dumps({'iv': iv, 'ciphertext': ct, 'salt': st})
+    with open('AES.json', 'w') as out:
+        out.write(result)
+    return ct
 
 # Convert string into binary
 def enc_string(data):
