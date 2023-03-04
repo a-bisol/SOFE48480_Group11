@@ -8,24 +8,38 @@ import json
 
 
 # TODO
-# Optional CBC-128 encoding
-# Figure out how to store IV (JSON or .bin file)
 # Check if string fits into image before encoding
-# Pyodide
+# Pyscript
+# Work with JPG/headers
 # Allow multiple encryption algos
 
+# Encrypt the given string using CBC
 def CBC_encrypt(data, password):
     salt = get_random_bytes(16)
     key = scrypt(password, salt, 16, N=2 ** 14, r=8, p=1)
     cipher = AES.new(key, AES.MODE_CBC)
+    data = data.encode('utf-8')
     ct_bytes = cipher.encrypt(pad(data, AES.block_size))
     iv = b64encode(cipher.iv).decode('utf-8')
     ct = b64encode(ct_bytes).decode('utf-8')
     st = b64encode(salt).decode('utf-8')
-    result = json.dumps({'iv': iv, 'ciphertext': ct, 'salt': st})
+    result = json.dumps({'iv': iv, 'salt': st})
     with open('AES.json', 'w') as out:
         out.write(result)
     return ct
+
+
+# Decrypt the given string using CBC
+def CBC_decrypt(data, password):
+    with open('AES.json', 'r') as jsonIn:
+        b64 = json.load(jsonIn)
+    iv = b64decode(b64['iv'])
+    st = b64decode(b64['salt'])
+    key = scrypt(password, st, 16, N=2 ** 14, r=8, p=1)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    pt = unpad(cipher.decrypt(data), AES.block_size)
+    return pt
+
 
 # Convert string into binary
 def enc_string(data):
@@ -93,6 +107,12 @@ def encode():
     if len(data) == 0:
         raise ValueError('Data is empty :(')
 
+    choice = int(input("Press 1 to Encrypt with CBC: "))
+    if choice == 1:
+        password = input("Please use the password to encrypt: ")
+        data = CBC_encrypt(data, password)
+        print("IV and salt saved to AES.json")
+
     newimg = image.copy()
     encode_image(newimg, data)
     newname = input("Enter exact name for new image(including extension): ")
@@ -121,11 +141,16 @@ def decode():
 
         data += chr(int(bin_string, 2))
         if pixels[-1] % 2 != 0:
-            return data
+            break
+    choice = int(input("Press 1 to decrypt with CBC (Ensure AES.json exists): "))
+    if choice == 1:
+        password = input("Please enter the password used for encryption: ")
+        data = CBC_decrypt(b64decode(data), password).decode('utf-8')
+    return data
 
 
-# Allow user to choose between encoding and decoding, probably switch to a loop to allow multiple uses
-def main():
+# Driver code
+if __name__ == '__main__':
     choice = int(input("Press 1 to Encode, 2 to Decode, and 0 to Exit: "))
     if choice == 1:
         encode()
@@ -135,8 +160,3 @@ def main():
         exit(0)
     else:
         raise Exception("Enter correct input")
-
-
-# Driver code
-if __name__ == '__main__':
-    main()
