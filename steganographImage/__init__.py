@@ -102,6 +102,7 @@ def encode_image(newimg, data):
 def encode():
     iname = input("Enter exact image name(including extension): ")
     image = Image.open(iname, 'r')
+    totalSpace = int((image.width * image.height) / 3)
 
     data = input("Enter data to be encoded : ")
     if len(data) == 0:
@@ -113,6 +114,8 @@ def encode():
         data = CBC_encrypt(data, password)
         print("IV and salt saved to AES.json")
 
+    if len(data) >= (totalSpace):
+        raise Exception("Data longer than space in image, please select a shorter image or a shorter message.")
     newimg = image.copy()
     encode_image(newimg, data)
     newname = input("Enter exact name for new image(including extension): ")
