@@ -8,7 +8,6 @@ import json
 
 
 # TODO
-# Check if string fits into image before encoding
 # Pyscript
 # Work with JPG/headers
 # Allow multiple encryption algos
