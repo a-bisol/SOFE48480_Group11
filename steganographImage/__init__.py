@@ -13,6 +13,7 @@ import json
 # Allow multiple encryption algos
 
 # Encrypt the given string using CBC
+# Scrypt is used to ensure that the password properly fits AES requirements
 def CBC_encrypt(data, password):
     salt = get_random_bytes(16)
     key = scrypt(password, salt, 16, N=2 ** 14, r=8, p=1)
@@ -99,32 +100,31 @@ def encode_image(newimg, data):
 
 # Main driver code for encoding
 def encode():
-    iname = input("Enter exact image name(including extension): ")
+    iname = input("Enter exact image name (including extension): ")
     image = Image.open(iname, 'r')
     totalSpace = int((image.width * image.height) / 3)
 
-    data = input("Enter data to be encoded : ")
+    data = input("Enter data to be encoded: ")
     if len(data) == 0:
-        raise ValueError('Data is empty :(')
+        raise ValueError('No data entered')
 
     choice = int(input("Press 1 to Encrypt with CBC: "))
     if choice == 1:
-        password = input("Please use the password to encrypt: ")
+        password = input("Please enter the password to use for encryption: ")
         data = CBC_encrypt(data, password)
         print("IV and salt saved to AES.json")
 
     if len(data) >= (totalSpace):
-        raise Exception("Data longer than space in image, please select a shorter image or a shorter message.")
+        raise Exception("Data longer than available space in image. Please select a shorter message or use a larger image.")
     newimg = image.copy()
     encode_image(newimg, data)
-    newname = input("Enter exact name for new image(including extension): ")
-    print(newname.split("."))
+    newname = input("Enter exact name for new image (including extension): ")
     newimg.save(newname)
 
 
 # Driver code for decoding
 def decode():
-    iname = input("Enter exact image name(including extension): ")
+    iname = input("Enter exact image name (including extension): ")
     image = Image.open(iname, 'r')
     data = ''
     imgdata = iter(image.getdata())
@@ -153,12 +153,11 @@ def decode():
 
 # Driver code
 if __name__ == '__main__':
-    choice = int(input("Press 1 to Encode, 2 to Decode, and 0 to Exit: "))
+    print("Please note that only .png and .bmp files are currently supported.")
+    choice = int(input("Press 1 to Encode or 2 to Decode: "))
     if choice == 1:
         encode()
     elif choice == 2:
         print("Decoded word is : " + decode())
-    elif choice == 0:
-        exit(0)
     else:
-        raise Exception("Enter correct input")
+        print("Exiting")
