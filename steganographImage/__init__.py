@@ -104,7 +104,14 @@ def encode():
     image = Image.open(iname, 'r')
     totalSpace = int((image.width * image.height) / 3)
 
-    data = input("Enter data to be encoded: ")
+    choice = int(input("Press 1 to use .txt for input, or 2 to type your message: "))
+    if choice == 1:
+        fname = input("Please enter the exact file name: ")
+        with open(fname, 'r') as file:
+            data = file.read().replace('\n', '')
+    else:
+        data = input("Enter data to me encoded: ")
+
     if len(data) == 0:
         raise ValueError('No data entered')
 
@@ -115,7 +122,8 @@ def encode():
         print("IV and salt saved to AES.json")
 
     if len(data) >= (totalSpace):
-        raise Exception("Data longer than available space in image. Please select a shorter message or use a larger image.")
+        raise Exception(
+            "Data longer than available space in image. Please select a shorter message or use a larger image.")
     newimg = image.copy()
     encode_image(newimg, data)
     newname = input("Enter exact name for new image (including extension): ")
