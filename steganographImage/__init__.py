@@ -110,7 +110,7 @@ def encode():
         with open(fname, 'r') as file:
             data = file.read().replace('\n', '')
     else:
-        data = input("Enter data to me encoded: ")
+        data = input("Enter data to be encoded: ")
 
     if len(data) == 0:
         raise ValueError('No data entered')
@@ -166,6 +166,6 @@ if __name__ == '__main__':
     if choice == 1:
         encode()
     elif choice == 2:
-        print("Decoded word is : " + decode())
+        print("Decoded message is : " + decode())
     else:
         print("Exiting")
