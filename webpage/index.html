@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="style.css" rel="stylesheet">
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <title>Python Steganography</title>
+</head>
+<body>
+<py-env>
+    - Pillow
+    - pycryptodome
+</py-env>
+<div class="container">
+    <div class="container">
+        <h3>Input</h3>
+        <div class="row justify-content-between">
+            <div class="col-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="encodeRadio" id="encode" checked>
+                    <label class="form-check-label" for="encode">
+                        Encoding
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="encodeRadio" id="decode">
+                    <label class="form-check-label" for="decode">
+                        Decoding
+                    </label>
+                </div>
+            </div>
+            <div class="col-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="encryptRadio" id="plain" checked>
+                    <label class="form-check-label" for="encode">
+                        Plaintext
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="encryptRadio" id="CBC">
+                    <label class="form-check-label" for="decode">
+                        CBC-128
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-4">
+                Upload image to use - <input type="file" id="image-upload" name="image-upload"
+                                             accept=".png,.bmp,image/png,image/bmp">
+            </div>
+            <div class="col text-end">
+                Please upload AES.json - <input type="file" id="extra-upload" name="extra-upload"
+                                                accept=".json,application/json">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                Enter message - <textarea id="message"></textarea>
+            </div>
+            <div class="col-4">
+                Or upload message<input type="file" id="msg-upload" name="msg-upload"
+                                        accept=".text,.txt,text/plain">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-10">
+                Please enter key - <input type="text" id="key-input" name="key-input" placeholder="Key">
+            </div>
+            <div class="col">
+                <button type="button" class="btn btn-secondary">
+                    Encode/Decode
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <h3>Output</h3>
+        <div class="row">
+            <div class="col-1">
+                Resultant message:
+            </div>
+            <div class="col">
+                <textarea id="result-msg" readonly></textarea>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                Resultant image - Download
+                <img id="imgDL">
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <h3>Console Output</h3>
+        <button py-click="write_to_page()" id="manual">Say Hello</button>
+        <py-terminal></py-terminal>
+    </div>
+    <div class="container">
+        <input type="file" id="testing">
+        <py-script src="./image_upload.py"></py-script>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+</body>
+</html>
