@@ -5,14 +5,12 @@ from Crypto.Util.Padding import pad, unpad
 from Crypto.Random import get_random_bytes
 from base64 import b64encode, b64decode
 import json
+import sys
+import os
 
 
-# TODO
-# CLI args
-# Allow multiple encryption algos (OFB/CFB)
-
+# Scrypt is used in the following algorithms to ensure that the given password properly fits AES requirements
 # Encrypt the given string using CBC
-# Scrypt is used to ensure that the password properly fits AES requirements
 def CBC_encrypt(data, password):
     salt = get_random_bytes(16)
     key = scrypt(password, salt, 16, N=2 ** 14, r=8, p=1)
@@ -23,19 +21,75 @@ def CBC_encrypt(data, password):
     ct = b64encode(ct_bytes).decode('utf-8')
     st = b64encode(salt).decode('utf-8')
     result = json.dumps({'iv': iv, 'salt': st})
-    with open('AES.json', 'w') as out:
+    with open('CBC.json', 'w') as out:
         out.write(result)
     return ct
 
 
 # Decrypt the given string using CBC
 def CBC_decrypt(data, password):
-    with open('AES.json', 'r') as jsonIn:
+    with open('CBC.json', 'r') as jsonIn:
         b64 = json.load(jsonIn)
     iv = b64decode(b64['iv'])
     st = b64decode(b64['salt'])
     key = scrypt(password, st, 16, N=2 ** 14, r=8, p=1)
     cipher = AES.new(key, AES.MODE_CBC, iv)
+    pt = unpad(cipher.decrypt(data), AES.block_size)
+    return pt
+
+
+# Encrypt the given string using CFB
+def CFB_encrypt(data, password):
+    salt = get_random_bytes(16)
+    key = scrypt(password, salt, 16, N=2 ** 14, r=8, p=1)
+    cipher = AES.new(key, AES.MODE_CFB)
+    data = data.encode('utf-8')
+    ct_bytes = cipher.encrypt(pad(data, AES.block_size))
+    iv = b64encode(cipher.iv).decode('utf-8')
+    ct = b64encode(ct_bytes).decode('utf-8')
+    st = b64encode(salt).decode('utf-8')
+    result = json.dumps({'iv': iv, 'salt': st})
+    with open('CFB.json', 'w') as out:
+        out.write(result)
+    return ct
+
+
+# Decrypt the given string using CFB
+def CFB_decrypt(data, password):
+    with open('CFB.json', 'r') as jsonIn:
+        b64 = json.load(jsonIn)
+    iv = b64decode(b64['iv'])
+    st = b64decode(b64['salt'])
+    key = scrypt(password, st, 16, N=2 ** 14, r=8, p=1)
+    cipher = AES.new(key, AES.MODE_CFB, iv)
+    pt = unpad(cipher.decrypt(data), AES.block_size)
+    return pt
+
+
+# Encrypt the given string using OFB
+def OFB_encrypt(data, password):
+    salt = get_random_bytes(16)
+    key = scrypt(password, salt, 16, N=2 ** 14, r=8, p=1)
+    cipher = AES.new(key, AES.MODE_OFB)
+    data = data.encode('utf-8')
+    ct_bytes = cipher.encrypt(pad(data, AES.block_size))
+    iv = b64encode(cipher.iv).decode('utf-8')
+    ct = b64encode(ct_bytes).decode('utf-8')
+    st = b64encode(salt).decode('utf-8')
+    result = json.dumps({'iv': iv, 'salt': st})
+    with open('OFB.json', 'w') as out:
+        out.write(result)
+    return ct
+
+
+# Decrypt the given string using OFB
+def OFB_decrypt(data, password):
+    with open('OFB.json', 'r') as jsonIn:
+        b64 = json.load(jsonIn)
+    iv = b64decode(b64['iv'])
+    st = b64decode(b64['salt'])
+    key = scrypt(password, st, 16, N=2 ** 14, r=8, p=1)
+    cipher = AES.new(key, AES.MODE_OFB, iv)
     pt = unpad(cipher.decrypt(data), AES.block_size)
     return pt
 
@@ -99,28 +153,58 @@ def encode_image(newimg, data):
 
 # Main driver code for encoding
 def encode():
-    iname = input("Enter exact image name (including extension): ")
+    iname = input("\nEnter exact image name (including extension): ")
     image = Image.open(iname, 'r')
-    totalSpace = int((image.width * image.height) / 3)
-
-    choice = int(input("Press 1 to use .txt for input, or 2 to type your message: "))
-    if choice == 1:
-        fname = input("Please enter the exact file name: ")
-        with open(fname, 'r') as file:
-            data = file.read().replace('\n', '')
-    else:
-        data = input("Enter data to be encoded: ")
+    total_space = int((image.width * image.height) / 3)
+    enc_choice = -1
+    print("Text input")
+    while enc_choice != (1 or 2):
+        print("\t1 - .txt file input\n\t2 - Type your message\n\t0 - Quit")
+        enc_choice = int(input("Choice: "))
+        if enc_choice == 1:
+            fname = input("\nPlease enter the exact file name: ")
+            with open(fname, 'r') as file:
+                data = file.read().replace('\n', '')
+            break
+        elif enc_choice == 2:
+            data = input("\nEnter data to be encoded: ")
+            break
+        elif enc_choice == 0:
+            sys.exit(0)
+        else:
+            print("\nPlease enter a valid choice")
 
     if len(data) == 0:
         raise ValueError('No data entered')
 
-    choice = int(input("Press 1 to Encrypt with CBC: "))
-    if choice == 1:
-        password = input("Please enter the password to use for encryption: ")
-        data = CBC_encrypt(data, password)
-        print("IV and salt saved to AES.json")
+    alg_choice = -1
+    print("\nEncryption algorithm")
+    while alg_choice != (1 or 2):
+        print('\t1 - Plaintext\n\t2 - CBC\n\t3 - CFB\n\t4 - OFB\n\t0 - Quit')
+        alg_choice = int(input("Choice: "))
+        if alg_choice == 1:
+            break
+        elif alg_choice == 2:
+            password = input("\nPlease enter the password to use for encryption: ")
+            data = CBC_encrypt(data, password)
+            print("IV and salt saved to CBC.json")
+            break
+        elif alg_choice == 3:
+            password = input("\nPlease enter the password to use for encryption: ")
+            data = CFB_encrypt(data, password)
+            print("IV and salt saved to CFB.json")
+            break
+        elif alg_choice == 4:
+            password = input("\nPlease enter the password to use for encryption: ")
+            data = OFB_encrypt(data, password)
+            print("IV and salt saved to OFB.json")
+            break
+        elif alg_choice == 0:
+            sys.exit(0)
+        else:
+            print("Please enter a valid choice")
 
-    if len(data) >= (totalSpace):
+    if len(data) >= (total_space):
         raise Exception(
             "Data longer than available space in image. Please select a shorter message or use a larger image.")
     newimg = image.copy()
@@ -151,20 +235,58 @@ def decode():
         data += chr(int(bin_string, 2))
         if pixels[-1] % 2 != 0:
             break
-    choice = int(input("Press 1 to decrypt with CBC (Ensure AES.json exists): "))
-    if choice == 1:
-        password = input("Please enter the password used for encryption: ")
-        data = CBC_decrypt(b64decode(data), password).decode('utf-8')
+
+    alg_choice = -1
+    print("\nEncryption algorithm")
+    while alg_choice != (1 or 2):
+        print("\t1 - Plaintext\n\t2 - CBC\n\t3 - CFB\n\t4 - OFB\n\t0 - Quit")
+        alg_choice = int(input("Choice: "))
+        if alg_choice == 1:
+            break
+        elif alg_choice == 2:
+            file_exist = os.path.isfile('./CBC.json')
+            if not file_exist:
+                raise Exception("CBC.json not found, please place it in the same folder/directory as this file.")
+            password = input("Please enter the password used for encryption: ")
+            data = CBC_decrypt(b64decode(data), password).decode('utf-8')
+            break
+        elif alg_choice == 3:
+            file_exist = os.path.isfile('./CFB.json')
+            if not file_exist:
+                raise Exception("CFB.json not found, please place it in the same folder/directory as this file.")
+            password = input("Please enter the password used for encryption: ")
+            data = CFB_decrypt(b64decode(data), password).decode('utf-8')
+            break
+        elif alg_choice == 4:
+            file_exist = os.path.isfile('./OFB.json')
+            if not file_exist:
+                raise Exception("OFB.json not found, please place it in the same folder/directory as this file.")
+            password = input("Please enter the password used for encryption: ")
+            data = OFB_decrypt(b64decode(data), password).decode('utf-8')
+            break
+        elif alg_choice == 0:
+            sys.exit(0)
+        else:
+            print("Please enter a valid choice")
     return data
 
 
 # Driver code
 if __name__ == '__main__':
+    choice = -1
     print("Please note that only .png and .bmp files are currently supported.")
-    choice = int(input("Press 1 to Encode or 2 to Decode: "))
-    if choice == 1:
-        encode()
-    elif choice == 2:
-        print("Decoded message is : " + decode())
-    else:
-        print("Exiting")
+    print("Choose operation mode")
+    while choice != 0:
+        print("\t1 - Encode\n\t2 - Decode\n\t0 - Quit")
+        choice = int(input("Choice: "))
+        if choice == 1:
+            encode()
+            print("Choose operation mode")
+        elif choice == 2:
+            print("Decoded message is: " + decode())
+            print("Choose operation mode")
+        elif choice == 0:
+            print("Exiting")
+            sys.exit(0)
+        else:
+            print("\nPlease enter a valid choice")
