@@ -8,9 +8,8 @@ import json
 
 
 # TODO
-# Pyscript
-# Work with JPG/headers
-# Allow multiple encryption algos
+# CLI args
+# Allow multiple encryption algos (OFB/CFB)
 
 # Encrypt the given string using CBC
 # Scrypt is used to ensure that the password properly fits AES requirements
