@@ -10,18 +10,23 @@ import os
 
 
 # Scrypt is used in the following algorithms to ensure that the given password properly fits AES requirements
-# Encrypt the given string using CBC
-def CBC_encrypt(data, password):
+# Generic encryption function that depends on algorithm input
+def encrypt(data, password, algo: str):
     salt = get_random_bytes(16)
     key = scrypt(password, salt, 16, N=2 ** 14, r=8, p=1)
-    cipher = AES.new(key, AES.MODE_CBC)
+    if algo == "CBC":
+        cipher = AES.new(key, AES.MODE_CBC)
+    elif algo == "CFB":
+        cipher = AES.new(key, AES.MODE_CFB)
+    elif algo == "OFB":
+        cipher = AES.new(key, AES.MODE_OFB)
     data = data.encode('utf-8')
     ct_bytes = cipher.encrypt(pad(data, AES.block_size))
     iv = b64encode(cipher.iv).decode('utf-8')
     ct = b64encode(ct_bytes).decode('utf-8')
     st = b64encode(salt).decode('utf-8')
     result = json.dumps({'iv': iv, 'salt': st})
-    with open('CBC.json', 'w') as out:
+    with open(algo + '.json', 'w') as out:
         out.write(result)
     return ct
 
@@ -38,22 +43,6 @@ def CBC_decrypt(data, password):
     return pt
 
 
-# Encrypt the given string using CFB
-def CFB_encrypt(data, password):
-    salt = get_random_bytes(16)
-    key = scrypt(password, salt, 16, N=2 ** 14, r=8, p=1)
-    cipher = AES.new(key, AES.MODE_CFB)
-    data = data.encode('utf-8')
-    ct_bytes = cipher.encrypt(pad(data, AES.block_size))
-    iv = b64encode(cipher.iv).decode('utf-8')
-    ct = b64encode(ct_bytes).decode('utf-8')
-    st = b64encode(salt).decode('utf-8')
-    result = json.dumps({'iv': iv, 'salt': st})
-    with open('CFB.json', 'w') as out:
-        out.write(result)
-    return ct
-
-
 # Decrypt the given string using CFB
 def CFB_decrypt(data, password):
     with open('CFB.json', 'r') as jsonIn:
@@ -64,22 +53,6 @@ def CFB_decrypt(data, password):
     cipher = AES.new(key, AES.MODE_CFB, iv)
     pt = unpad(cipher.decrypt(data), AES.block_size)
     return pt
-
-
-# Encrypt the given string using OFB
-def OFB_encrypt(data, password):
-    salt = get_random_bytes(16)
-    key = scrypt(password, salt, 16, N=2 ** 14, r=8, p=1)
-    cipher = AES.new(key, AES.MODE_OFB)
-    data = data.encode('utf-8')
-    ct_bytes = cipher.encrypt(pad(data, AES.block_size))
-    iv = b64encode(cipher.iv).decode('utf-8')
-    ct = b64encode(ct_bytes).decode('utf-8')
-    st = b64encode(salt).decode('utf-8')
-    result = json.dumps({'iv': iv, 'salt': st})
-    with open('OFB.json', 'w') as out:
-        out.write(result)
-    return ct
 
 
 # Decrypt the given string using OFB
@@ -186,7 +159,8 @@ def encode():
             break
         elif alg_choice == 2:
             password = input("\nPlease enter the password to use for encryption: ")
-            data = CBC_encrypt(data, password)
+            data = encrypt(data, password, "CBC")
+            # data = CBC_encrypt(data, password)
             print("IV and salt saved to CBC.json")
             break
         elif alg_choice == 3:
