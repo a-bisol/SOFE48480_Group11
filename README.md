@@ -3,8 +3,9 @@
 `PiHide` allows users to quickly encode and decode hidden messages into images using various optional encryption algorithms.
 
 # Table of Contents
-
-
+  * [Requirements](#requirements)
+  * [Installation and Usage](#Installation-and-Usage)
+  * [Potential improvements](#potential-improvements)
 # Requirements
 
  - Python 3.x with the following packages:
