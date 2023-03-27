@@ -25,4 +25,5 @@ Ensure all relevant text/image/JSON files are contained within the same folder a
 	 - GUI program
 	 - Website/web server
  - Allow usage of more than .png or .bmp files
+ - Select which channel will be modified
  - Batch processing of multiple images/files at once
