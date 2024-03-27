@@ -1,6 +1,6 @@
 # PyHide
 
-`PiHide` allows users to quickly encode and decode hidden messages into images using various optional encryption algorithms.
+`PyHide` allows users to quickly encode and decode hidden messages into images using various optional encryption algorithms.
 
 # Table of Contents
   * [Requirements](#requirements)
